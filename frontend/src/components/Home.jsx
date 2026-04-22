@@ -22,6 +22,8 @@ function Home() {
       <Navbar />
       <HeroSection />
       <CategoryCarousel />
+          <div className="bg-white text-black dark:bg-gray-950 dark:text-white"> </div>
+
       <LatestJobs />
       <Footer/>
     </div>

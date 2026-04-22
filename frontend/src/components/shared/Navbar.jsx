@@ -9,6 +9,7 @@ import axios from 'axios'
 import { USER_API_END_POINT } from '@/utils/constant'
 import { setUser } from '@/redux/authSlice'
 import { toast } from 'sonner'
+import DarkToggle from './DarkToggle'
 
 const Navbar = () => {
     const { user } = useSelector(store => store.auth);
@@ -25,17 +26,21 @@ const Navbar = () => {
             }
         } catch (error) {
             console.log(error);
-            toast.error(error.response.data.message);
+            toast.error(error?.response?.data?.message || "Logout failed");
         }
     }
+
     return (
-        <div className='bg-white'>
-            <div className='flex items-center justify-between mx-auto max-w-7xl h-16'>
+        <div className='bg-white dark:bg-gray-900 border-b dark:border-gray-700'>
+            <div className='flex items-center justify-between mx-auto max-w-7xl h-16 px-4'>
                 <div>
-                    <h1 className='text-2xl font-bold'>Next<span className='text-[#F83002]'>Hire</span></h1>
+                    <h1 className='text-2xl font-bold text-black dark:text-white'>
+                        Next<span className='text-[#F83002]'>Hire</span>
+                    </h1>
                 </div>
-                <div className='flex items-center gap-12'>
-                    <ul className='flex font-medium items-center gap-5'>
+
+                <div className='flex items-center gap-6'>
+                    <ul className='flex font-medium items-center gap-5 text-black dark:text-white'>
                         {
                             user && user.role === 'recruiter' ? (
                                 <>
@@ -50,14 +55,23 @@ const Navbar = () => {
                                 </>
                             )
                         }
-
-
                     </ul>
+
+                    <DarkToggle />
+
                     {
                         !user ? (
                             <div className='flex items-center gap-2'>
-                                <Link to="/login"><Button variant="outline">Login</Button></Link>
-                                <Link to="/signup"><Button className="bg-[#6A38C2] hover:bg-[#5b30a6]">Signup</Button></Link>
+                                <Link to="/login">
+                                    <Button variant="outline" className="dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                                        Login
+                                    </Button>
+                                </Link>
+                                <Link to="/signup">
+                                    <Button className="bg-[#6A38C2] hover:bg-[#5b30a6]">
+                                        Signup
+                                    </Button>
+                                </Link>
                             </div>
                         ) : (
                             <Popover>
@@ -66,30 +80,36 @@ const Navbar = () => {
                                         <AvatarImage src={user?.profile?.profilePhoto} alt="@shadcn" />
                                     </Avatar>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-80">
-                                    <div className=''>
+
+                                <PopoverContent className="w-80 bg-white dark:bg-gray-900 dark:border-gray-700">
+                                    <div>
                                         <div className='flex gap-2 space-y-2'>
                                             <Avatar className="cursor-pointer">
                                                 <AvatarImage src={user?.profile?.profilePhoto} alt="@shadcn" />
                                             </Avatar>
                                             <div>
-                                                <h4 className='font-medium'>{user?.fullname}</h4>
-                                                <p className='text-sm text-muted-foreground'>{user?.profile?.bio}</p>
+                                                <h4 className='font-medium text-black dark:text-white'>{user?.fullname}</h4>
+                                                <p className='text-sm text-muted-foreground dark:text-gray-400'>{user?.profile?.bio}</p>
                                             </div>
                                         </div>
-                                        <div className='flex flex-col my-2 text-gray-600'>
+
+                                        <div className='flex flex-col my-2 text-gray-600 dark:text-gray-300'>
                                             {
                                                 user && user.role === 'student' && (
                                                     <div className='flex w-fit items-center gap-2 cursor-pointer'>
                                                         <User2 />
-                                                        <Button variant="link"> <Link to="/profile">View Profile</Link></Button>
+                                                        <Button variant="link" className="text-black dark:text-white">
+                                                            <Link to="/profile">View Profile</Link>
+                                                        </Button>
                                                     </div>
                                                 )
                                             }
 
                                             <div className='flex w-fit items-center gap-2 cursor-pointer'>
                                                 <LogOut />
-                                                <Button onClick={logoutHandler} variant="link">Logout</Button>
+                                                <Button onClick={logoutHandler} variant="link" className="text-black dark:text-white">
+                                                    Logout
+                                                </Button>
                                             </div>
                                         </div>
                                     </div>
@@ -97,10 +117,8 @@ const Navbar = () => {
                             </Popover>
                         )
                     }
-
                 </div>
             </div>
-
         </div>
     )
 }
