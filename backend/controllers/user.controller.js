@@ -28,13 +28,17 @@ export const register = async (req, res) => {
     let profilePhoto = "";
 
     if (req.file) {
-      const fileUri = getDataUri(req.file);
+      try {
+        const fileUri = getDataUri(req.file);
 
-      const cloudResponse = await cloudinary.uploader.upload(fileUri.content, {
-        folder: "profile_photos",
-      });
+        const cloudResponse = await cloudinary.uploader.upload(fileUri.content, {
+          folder: "profile_photos",
+        });
 
-      profilePhoto = cloudResponse.secure_url;
+        profilePhoto = cloudResponse.secure_url;
+      } catch (err) {
+        console.log("CLOUDINARY ERROR:", err);
+      }
     }
 
     await User.create({
@@ -183,16 +187,24 @@ export const updateProfile = async (req, res) => {
     if (skills) user.profile.skills = skillsArray;
 
     if (req.file) {
-      const fileUri = getDataUri(req.file);
+      try {
+        const fileUri = getDataUri(req.file);
 
-      const cloudResponse = await cloudinary.uploader.upload(fileUri.content, {
-        resource_type: "raw",
-        type: "upload",
-        folder: "resumes",
-      });
+        const cloudResponse = await cloudinary.uploader.upload(fileUri.content, {
+          resource_type: "raw",
+          type: "upload",
+          folder: "resumes",
+        });
 
-      user.profile.resume = cloudResponse.secure_url;
-      user.profile.resumeOriginalName = req.file.originalname;
+        user.profile.resume = cloudResponse.secure_url;
+        user.profile.resumeOriginalName = req.file.originalname;
+      } catch (err) {
+        console.log("RESUME UPLOAD ERROR:", err);
+        return res.status(500).json({
+          message: "Resume upload failed.",
+          success: false,
+        });
+      }
     }
 
     await user.save();
