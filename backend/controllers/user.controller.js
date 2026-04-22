@@ -27,18 +27,9 @@ export const register = async (req, res) => {
 
     let profilePhoto = "";
 
+    // temporary: cloudinary upload disabled for production debug
     if (req.file) {
-      try {
-        const fileUri = getDataUri(req.file);
-
-        const cloudResponse = await cloudinary.uploader.upload(fileUri.content, {
-          folder: "profile_photos",
-        });
-
-        profilePhoto = cloudResponse.secure_url;
-      } catch (err) {
-        console.log("CLOUDINARY ERROR:", err);
-      }
+      console.log("Skipping cloudinary upload temporarily");
     }
 
     await User.create({
