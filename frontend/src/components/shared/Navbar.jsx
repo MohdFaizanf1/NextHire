@@ -9,7 +9,6 @@ import axios from 'axios'
 import { USER_API_END_POINT } from '@/utils/constant'
 import { setUser } from '@/redux/authSlice'
 import { toast } from 'sonner'
-import DarkToggle from './DarkToggle'
 
 const Navbar = () => {
     const { user } = useSelector(store => store.auth);
@@ -17,30 +16,46 @@ const Navbar = () => {
     const navigate = useNavigate();
 
     const logoutHandler = async () => {
+        console.log("Logout button clicked");
+
         try {
-            const res = await axios.get(`${USER_API_END_POINT}/logout`, { withCredentials: true });
+            const res = await axios.get(`${USER_API_END_POINT}/logout`, {
+                withCredentials: true,
+            });
+
+            console.log("Logout response:", res.data);
+
             if (res.data.success) {
                 dispatch(setUser(null));
-                navigate("/");
+
+                // clear redux persist
+                localStorage.removeItem("persist:root");
+                sessionStorage.clear();
+
                 toast.success(res.data.message);
+
+                navigate("/");
+                window.location.reload();
             }
         } catch (error) {
-            console.log(error);
+            console.log("LOGOUT ERROR:", error);
             toast.error(error?.response?.data?.message || "Logout failed");
         }
-    }
+    };
 
     return (
-        <div className='bg-white dark:bg-gray-900 border-b dark:border-gray-700'>
+        <div className='bg-white border-b'>
             <div className='flex items-center justify-between mx-auto max-w-7xl h-16 px-4'>
-                <div>
-                    <h1 className='text-2xl font-bold text-black dark:text-white'>
-                        Next<span className='text-[#F83002]'>Hire</span>
-                    </h1>
-                </div>
+                
+                {/* Logo */}
+                <h1 className='text-2xl font-bold text-black'>
+                    Next<span className='text-[#F83002]'>Hire</span>
+                </h1>
 
                 <div className='flex items-center gap-6'>
-                    <ul className='flex font-medium items-center gap-5 text-black dark:text-white'>
+
+                    {/* Links */}
+                    <ul className='flex font-medium items-center gap-5 text-black'>
                         {
                             user && user.role === 'recruiter' ? (
                                 <>
@@ -57,18 +72,15 @@ const Navbar = () => {
                         }
                     </ul>
 
-                    <DarkToggle />
-
+                    {/* Auth */}
                     {
                         !user ? (
-                            <div className='flex items-center gap-2'>
+                            <div className='flex gap-2'>
                                 <Link to="/login">
-                                    <Button variant="outline" className="dark:bg-gray-800 dark:text-white dark:border-gray-600">
-                                        Login
-                                    </Button>
+                                    <Button variant="outline">Login</Button>
                                 </Link>
                                 <Link to="/signup">
-                                    <Button className="bg-[#6A38C2] hover:bg-[#5b30a6]">
+                                    <Button className="bg-[#6A38C2] text-white">
                                         Signup
                                     </Button>
                                 </Link>
@@ -77,46 +89,56 @@ const Navbar = () => {
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Avatar className="cursor-pointer">
-                                        <AvatarImage src={user?.profile?.profilePhoto} alt="@shadcn" />
+                                        <AvatarImage src={user?.profile?.profilePhoto} />
                                     </Avatar>
                                 </PopoverTrigger>
 
-                                <PopoverContent className="w-80 bg-white dark:bg-gray-900 dark:border-gray-700">
-                                    <div>
-                                        <div className='flex gap-2 space-y-2'>
-                                            <Avatar className="cursor-pointer">
-                                                <AvatarImage src={user?.profile?.profilePhoto} alt="@shadcn" />
-                                            </Avatar>
-                                            <div>
-                                                <h4 className='font-medium text-black dark:text-white'>{user?.fullname}</h4>
-                                                <p className='text-sm text-muted-foreground dark:text-gray-400'>{user?.profile?.bio}</p>
-                                            </div>
-                                        </div>
+                                <PopoverContent className="w-80 bg-white border">
+                                    
+                                    {/* User Info */}
+                                    <div className='flex gap-2'>
+                                        <Avatar>
+                                            <AvatarImage src={user?.profile?.profilePhoto} />
+                                        </Avatar>
 
-                                        <div className='flex flex-col my-2 text-gray-600 dark:text-gray-300'>
-                                            {
-                                                user && user.role === 'student' && (
-                                                    <div className='flex w-fit items-center gap-2 cursor-pointer'>
-                                                        <User2 />
-                                                        <Button variant="link" className="text-black dark:text-white">
-                                                            <Link to="/profile">View Profile</Link>
-                                                        </Button>
-                                                    </div>
-                                                )
-                                            }
-
-                                            <div className='flex w-fit items-center gap-2 cursor-pointer'>
-                                                <LogOut />
-                                                <Button onClick={logoutHandler} variant="link" className="text-black dark:text-white">
-                                                    Logout
-                                                </Button>
-                                            </div>
+                                        <div>
+                                            <h4 className='font-medium'>{user?.fullname}</h4>
+                                            <p className='text-sm text-gray-500'>
+                                                {user?.profile?.bio}
+                                            </p>
                                         </div>
                                     </div>
+
+                                    {/* Actions */}
+                                    <div className='flex flex-col mt-3'>
+
+                                        {
+                                            user?.role === 'student' && (
+                                                <Link to="/profile" className='flex gap-2 items-center'>
+                                                    <User2 />
+                                                    View Profile
+                                                </Link>
+                                            )
+                                        }
+
+                                        <button
+                                            onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                logoutHandler();
+                                            }}
+                                            className="flex gap-2 items-center mt-3"
+                                        >
+                                            <LogOut size={18} />
+                                            Logout
+                                        </button>
+
+                                    </div>
+
                                 </PopoverContent>
                             </Popover>
                         )
                     }
+
                 </div>
             </div>
         </div>

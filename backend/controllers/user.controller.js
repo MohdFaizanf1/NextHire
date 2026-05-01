@@ -3,6 +3,88 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import getDataUri from "../utils/datauri.js";
 import cloudinary from "../utils/cloudinary.js";
+import { OAuth2Client } from "google-auth-library";
+
+const client = new OAuth2Client("819908987962-mn6phhl1ivonhh78ngl2th86qsv37kot.apps.googleusercontent.com");
+
+export const googleLogin = async (req, res) => {
+  try {
+    const { credential, role } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        message: "Credential missing",
+        success: false,
+      });
+    }
+
+    // 🔥 verify google token
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: "819908987962-mn6phhl1ivonhh78ngl2th86qsv37kot.apps.googleusercontent.com",
+    });
+
+    const payload = ticket.getPayload();
+
+    const email = payload.email;
+    const fullname = payload.name;
+    const profilePhoto = payload.picture;
+
+    // 🔥 check user exist
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // 🔥 create new user
+      user = await User.create({
+        fullname,
+        email,
+        phoneNumber: "0000000000",
+        password: "google_user",
+        role: role || "student",
+        profile: {
+          profilePhoto,
+        },
+      });
+    }
+
+    // 🔥 create JWT
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.SECRET_KEY,
+      { expiresIn: "1d" }
+    );
+
+    const safeUser = {
+      _id: user._id,
+      fullname: user.fullname,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      profile: user.profile,
+    };
+
+    return res
+      .status(200)
+      .cookie("token", token, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 1 * 24 * 60 * 60 * 1000,
+      })
+      .json({
+        message: `Welcome ${safeUser.fullname}`,
+        user: safeUser,
+        success: true,
+      });
+
+  } catch (error) {
+    console.log("GOOGLE LOGIN ERROR:", error);
+    return res.status(500).json({
+      message: "Google login failed",
+      success: false,
+    });
+  }
+};
 
 export const register = async (req, res) => {
   try {
@@ -133,11 +215,10 @@ export const logout = async (req, res) => {
   try {
     return res
       .status(200)
-      .cookie("token", "", {
-        maxAge: 0,
+      .clearCookie("token", {
         httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        secure: false,
+        sameSite: "lax",
       })
       .json({
         message: "Logged out successfully.",
